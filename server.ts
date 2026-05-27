@@ -29,6 +29,16 @@ initDatabase();
 
 app.use(express.json());
 
+// Handle Netlify function path rewrites to match standard Express routes
+app.use((req, res, next) => {
+  if (req.url.startsWith("/.netlify/functions/api")) {
+    req.url = req.url.replace("/.netlify/functions/api", "/api");
+  } else if (req.url.startsWith("/.netlify/functions")) {
+    req.url = req.url.replace("/.netlify/functions", "/api");
+  }
+  next();
+});
+
 // 1. IN-MEMORY HIGH-PERFORMANCE RATE LIMITER (Zero third-party dependency)
 interface RateLimitRecord {
   timestamps: number[];

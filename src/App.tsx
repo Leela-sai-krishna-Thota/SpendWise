@@ -28,9 +28,15 @@ export default function App() {
     try {
       const response = await fetch(`/api/share/${id}`);
       if (!response.ok) {
-        throw new Error("This audit session could not be retrieved or does not exist.");
+        throw new Error(`This audit session could not be retrieved (${response.status}: ${response.statusText || "Not Found"}).`);
       }
-      const data = await response.json();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw new Error("Invalid response format received from the server. Please match server setup configurations.");
+      }
       setResults(data);
     } catch (e: any) {
       setErrorMsg(e.message || "An unexpected error occurred while parsing the share link.");
@@ -52,11 +58,23 @@ export default function App() {
       });
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Server error occurred while executing the savings audit.");
+        let errMsg = "Server error occurred while executing the savings audit.";
+        try {
+          const errData = await response.json();
+          errMsg = errData.message || errData.error || errMsg;
+        } catch (_) {
+          // If response is not JSON (e.g. gateway timeout or raw HTML error from server/Netlify)
+          errMsg = `Server error (${response.status}): ${response.statusText || "Unable to complete request"}`;
+        }
+        throw new Error(errMsg);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw new Error("Unable to parse successful response logic into JSON format.");
+      }
       setResults(data);
       
       // Update history state so URL updates smoothly without full reloads
