@@ -171,7 +171,7 @@ ${toolDetailsList}
 Please write a highly tailored, ~100-word personalized analysis of their stack. Point out the single biggest point of wastage (e.g. tool overlaps, inactive seats on minimum pricing tiers, or excessive premium licensing where API/cheaper options suffice). Highlight how they can execute these changes immediately and guide them to consider Credex if savings exceed $500/month or to stay optimized if spending well.`;
 
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.0-flash",
           contents: prompt,
           config: {
             systemInstruction: "You are an expert Chief Technology Officer (CTO) and corporate CFO specialized in optimization of startup infrastructure, SaaS toolchains, and developer tools. Write a concise, highly insightful, and authoritative 100-word summary of the potential savings and recommendations. Use actual numbers.",
