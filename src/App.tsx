@@ -61,7 +61,7 @@ export default function App() {
         let errMsg = "Server error occurred while executing the savings audit.";
         try {
           const errData = await response.json();
-          errMsg = errData.message || errData.error || errMsg;
+          errMsg = errData.message || errData.error || errData.errorMessage || errMsg;
         } catch (_) {
           // If response is not JSON (e.g. gateway timeout or raw HTML error from server/Netlify)
           errMsg = `Server error (${response.status}): ${response.statusText || "Unable to complete request"}`;

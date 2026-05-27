@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import fs from "fs/promises";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { runAudit } from "./src/auditEngine";
@@ -101,7 +100,12 @@ function getGeminiClient(): GoogleGenAI | null {
 // REST API: Run Audit payload and save
 app.get("/api/admin/leads", async (req, res) => {
   try {
-    const files = await fs.readdir(DATA_DIR);
+    let files: string[] = [];
+    try {
+      files = await fs.readdir(DATA_DIR);
+    } catch (_) {
+      // Directory may not exist yet or is empty
+    }
     const leads = [];
     for (const file of files) {
       if (file.endsWith(".json")) {
@@ -210,13 +214,17 @@ Please write a highly tailored, ~100-word personalized analysis of their stack. 
       results: auditResults
     };
 
-    await fs.writeFile(
-      path.join(DATA_DIR, `${auditId}.json`),
-      JSON.stringify(completeData, null, 2),
-      "utf8"
-    );
+    try {
+      await fs.writeFile(
+        path.join(DATA_DIR, `${auditId}.json`),
+        JSON.stringify(completeData, null, 2),
+        "utf8"
+      );
+      console.log(`[Storage] Audit record saved successfully for ID: ${auditId}`);
+    } catch (saveErr) {
+      console.warn(`[Storage Warning] Failed to persist data file for ID ${auditId} (Non-blocking fallback):`, saveErr);
+    }
 
-    console.log(`[Storage] Audit record saved successfully for ID: ${auditId}`);
     res.json(auditResults);
   } catch (error) {
     console.error("[Billing Server Error] Failed to compute stack audit:", error);
@@ -317,6 +325,7 @@ async function serveOGHandshake(req: express.Request, res: express.Response, isP
 // SETUP MIXED DEV/PROD ROUTING
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
