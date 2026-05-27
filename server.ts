@@ -10,9 +10,11 @@ import { AuditPayload } from "./src/types";
 // Load environment variables
 dotenv.config();
 
-const app = express();
+export const app = express();
 const PORT = 3000;
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = process.env.NETLIFY === "true"
+  ? path.join("/tmp", "data")
+  : path.join(process.cwd(), "data");
 
 // Initialize state directory
 async function initDatabase() {
@@ -336,4 +338,6 @@ async function startServer() {
   });
 }
 
-startServer();
+if (process.env.NETLIFY !== "true") {
+  startServer();
+}
